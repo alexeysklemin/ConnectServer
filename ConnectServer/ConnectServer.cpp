@@ -4,13 +4,19 @@
 #include <nlohmann/json.hpp>
 
 
-int main()
-{
-    uWS::SSLApp({
+//Strucrure is joined to each connection
+struct UserData {
+    int user_id;
+    std::string name;
+};
 
-        /* There are tons of SSL options, see uSockets */
-        .cert_file_name = "cert.pem",
-        .key_file_name = "key.pem"
+int main() {
+
+    uWS::App({
+
+        ///* There are tons of SSL options, see uSockets */
+        //.cert_file_name = "cert.pem",
+        //.key_file_name = "key.pem"
 
         }).get("/hello", [](auto* res, auto* req) {
 
@@ -36,4 +42,3 @@ int main()
 
                     }).run();
 }
-
