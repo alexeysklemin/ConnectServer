@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 
 
-//Strucrure is joined to each connection
+//Strucrure is joined to each connection..
 struct UserData {
     int user_id;
     std::string name;
