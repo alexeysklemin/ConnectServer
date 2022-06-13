@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include <uwebsockets/App.h>
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 
 
 //Strucrure is joined to each connection..
@@ -12,13 +12,7 @@ struct UserData {
 
 int main() {
 
-    uWS::App({
-
-        ///* There are tons of SSL options, see uSockets */
-        //.cert_file_name = "cert.pem",
-        //.key_file_name = "key.pem"
-
-        }).get("/hello", [](auto* res, auto* req) {
+    uWS::App().get("/hello", [](auto* res, auto* req) {
 
             /* You can efficiently stream huge files too */
             res->writeHeader("Content-Type", "text/html; charset=utf-8")->end("Hello HTTP!");
