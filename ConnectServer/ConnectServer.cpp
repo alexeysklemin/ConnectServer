@@ -11,6 +11,7 @@ struct UserData {
 };
 
 int main() {
+    int latestUserId = 10;
 
     uWS::App().get("/hello", [](auto* res, auto* req) {
 
@@ -21,6 +22,9 @@ int main() {
 
                 /* Just a few of the available handlers */
                 .open = [](auto* ws) {
+                    UserData* data = ws->getUserData();
+                    data->user_id = latestUserId++;
+
                     /* MQTT syntax */
                     ws->subscribe("sensors/+/house");
                 },
