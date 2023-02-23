@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <string>
 #include <uwebsockets/App.h>
 #include <nlohmann/json.hpp>
 
@@ -7,60 +8,70 @@
 //Strucrure is joined to each connection..
 using json = nlohmann::json;
 
-struct UserData {
-    int user_id;
-    std::string name;
-};
-
-const std::string COMMAND = "COMMAND";
-const std::string PRIVATE_MSG = "PRIVATE_MSG";
-const std::string USER_ID_TO = "user_id_to";
-const std::string TEXT = "text";
-
-void processMessage(auto *ws, auto message) {
-    json data = json::parse(message);
-
-    switch (data[COMMAND]){
-    case PRIVATE_MSG:
-        break;
-    case PUBLIC_MSG:
-        break;
-    }
+void process_public_msg(auto data, auto* ws) {
+    json payload{
+        {"command", data["command"]},
+        {"text", data["text"]},
+        {"user_from", ws->getUserData->user_id}
+    };
+    ws->publish("public", payload.dump());
 }
+
+
+void process_private_msg(auto data, auto* ws) {
+    json payload{
+        {"command", data["command"]},
+        {"text", data["text"]},
+        {"user_from", ws->getUserData->user_id}
+    };
+    int user_to = data["user_to"];
+    ws->publish("public" + std::string(user_to), payload.dump());
+}
+
+
+
 
 int main() {
     int latestUserId = 10;
 
-    uWS::App().get("/hello", [](auto* res, auto* req) {
+    struct UserData {
+        int user_id;
+        std::string name;
+    };
+    
 
-            /* You can efficiently stream huge files too */
-            res->writeHeader("Content-Type", "text/html; charset=utf-8")->end("Hello HTTP!");
+    /* Keep in mind that uWS::SSLApp({options}) is the same as uWS::App() when compiled without SSL support.
+     * You may swap to using uWS:App() if you don't need SSL */
+    uWS::App().ws<UserData>("/*", {
+            /* Settings */
 
-            }).ws<UserData>("/*", {
+            .idleTimeout = 16,
 
-                /* Just a few of the available handlers */
-                .open = [&latestUserId](auto* ws) {
-                    UserData* data = ws->getUserData();
-                    data->user_id = latestUserId++;
-                    std::cout << "User connected ID " << data->user_id << std::endl;
+            /* Handlers */
 
-                    /* MQTT syntax */
-                   // ws->subscribe("sensors/+/house");
-                },
-                .message = [](auto* ws, std::string_view message, uWS::OpCode opCode) {
-                   // ws->send(message, opCode);
-                    processMessage(ws, message);
-                },
-                .close = [](auto* ws, int code, std::string_view message) {
-                    //
-}
+            .open = [&latestUserId](auto*ws) {
+                /* Open event here, you may access ws->getUserData() which points to a PerSocketData struct */
+            auto data = ws-> getUserData();
+            data->user_id = latestUserId++;
+            data->name = "noname";
+            ws->subscribe("public");
+            ws->subscribe("user " + std::to_string(data->user_id));
 
+            },
+            .message = [](auto* ws, std::string_view data, uWS::OpCode opCode) {
+                json parsed_data = json::parse(data);
 
-                }).listen(9001, [](auto* listenSocket) {
+                if (parsed_data["command"] == "public_msg") {
+                    process_public_msg(parsed_data, ws);
+                }
 
-                    if (listenSocket) {
-                        std::cout << "Listening on port " << 9001 << std::endl;
-                    }
-
-                    }).run();
+            },
+            .close = [](auto*/*ws*/, int /*code*/, std::string_view /*message*/) {
+                /* You may access ws->getUserData() here */
+            }
+            }).listen(9001, [](auto* listen_socket) {
+                if (listen_socket) {
+                    std::cout << "Listening on port " << 9001 << std::endl;
+                }
+                }).run();
 }
