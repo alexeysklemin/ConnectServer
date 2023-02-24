@@ -12,7 +12,7 @@ void process_public_msg(auto data, auto* ws) {
     json payload{
         {"command", data["command"]},
         {"text", data["text"]},
-        {"user_from", ws->getUserData->user_id}
+        {"user_from", ws->getUserData()->user_id}
     };
     ws->publish("public", payload.dump());
 }
@@ -22,7 +22,7 @@ void process_private_msg(auto data, auto* ws) {
     json payload{
         {"command", data["command"]},
         {"text", data["text"]},
-        {"user_from", ws->getUserData->user_id}
+        {"user_from", ws->getUserData()->user_id}
     };
     int user_to = data["user_to"];
     ws->publish("user" + std::to_string(user_to), payload.dump());
