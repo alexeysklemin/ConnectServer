@@ -25,10 +25,12 @@ void process_private_msg(auto data, auto* ws) {
         {"user_from", ws->getUserData->user_id}
     };
     int user_to = data["user_to"];
-    ws->publish("public" + std::string(user_to), payload.dump());
+    ws->publish("user" + std::to_string(user_to), payload.dump());
 }
 
-
+void process_set_name(auto data, auto* ws) {
+    ws->getUserData()->name = data["name"];
+}
 
 
 int main() {
@@ -63,6 +65,10 @@ int main() {
 
                 if (parsed_data["command"] == "public_msg") {
                     process_public_msg(parsed_data, ws);
+                }
+
+                if (parsed_data["command"] == "private_msg") {
+                    process_private_msg(parsed_data, ws);
                 }
 
             },
